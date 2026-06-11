@@ -31,6 +31,20 @@ RUN curl -LO https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz 
 USER vscode
 WORKDIR /workspace
 
+
+# 1. Install Starship Prompt (Requires root)
+RUN curl -sS https://starship.rs/install.sh | sh -s -- -y
+
+# Drop down to the secure, non-root user
+USER vscode
+WORKDIR /workspace
+
+# 2. Clone Zsh UI plugins to match your Mac's directory structure
+RUN mkdir -p ~/.zsh \
+    && git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions \
+    && git clone https://github.com/zsh-users/zsh-syntax-highlighting ~/.zsh/zsh-syntax-highlighting
+
+
 # Clone and install your universal dotfiles
 # (Ensure your GitHub URL is correct here)
 RUN git clone https://github.com/sean-lamont/dotfiles.git ~/dotfiles \
