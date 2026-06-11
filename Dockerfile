@@ -1,25 +1,26 @@
 FROM mcr.microsoft.com/devcontainers/miniconda:0-3
 
-# Inject the context variable so your dotfiles know where they are
 ENV IS_AGENT_SANDBOX=true
 ENV DEBIAN_FRONTEND=noninteractive
 
-# FIX 1: Remove the expired Yarn repository so apt doesn't crash
+# FIX 1: Remove the expired Yarn repository
 RUN rm -f /etc/apt/sources.list.d/yarn.list
 
-# FIX 2: Install core tools AND the dependencies required to build modern Tmux
+# FIX 2: Install dependencies for compiling both Tmux AND Neovim
 RUN apt-get update && apt-get -y install \
     zsh build-essential curl git ripgrep unzip \
     libevent-dev ncurses-dev bison pkg-config \
+    ninja-build gettext cmake \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Pull the latest stable Neovim binaries
-RUN curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz \
-    && tar -C /opt -xzf nvim-linux-x86_64.tar.gz \
-    && ln -s /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim \
-    && rm nvim-linux-x86_64.tar.gz
+# FIX 3: Compile Neovim from source (Bypasses the glibc version mismatch)
+RUN git clone -b stable --single-branch https://github.com/neovim/neovim.git \
+    && cd neovim \
+    && make CMAKE_BUILD_TYPE=RelWithDebInfo \
+    && make install \
+    && cd .. && rm -rf neovim
 
-# FIX 3: Compile modern Tmux (3.4) from source to enable OSC 52 passthrough
+# FIX 4: Compile modern Tmux (3.4) for OSC 52 clipboard routing
 RUN curl -LO https://github.com/tmux/tmux/releases/download/3.4/tmux-3.4.tar.gz \
     && tar -xzf tmux-3.4.tar.gz \
     && cd tmux-3.4 \
