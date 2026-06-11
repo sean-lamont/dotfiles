@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  agent-sandbox:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Mounts your local project directly into the container.
+      # Changes made by the agent here will instantly reflect on your Mac.
+      - .:/workspace:cached
+    working_dir: /workspace
+    user: vscode
+
